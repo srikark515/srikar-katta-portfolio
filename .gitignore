@@ -1,0 +1,8 @@
+# Large media files exceeding GitHub's 100MB file size limit
+assets/videos/speed_of_light_v01.mp4
+assets/videos/urban_symphony_v02.mp4
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo

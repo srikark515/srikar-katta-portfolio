@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30">
+  <defs>
+    <filter id="spidey-hover-glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="2" flood-color="#000000" flood-opacity="0.9"/>
+      <feDropShadow dx="0" dy="0" stdDeviation="2.5" flood-color="#00f2fe" flood-opacity="0.9"/>
+    </filter>
+  </defs>
+  <!-- 8 Spider Legs in Hover Stance -->
+  <!-- Left Legs -->
+  <path d="M 13 11 C 8 4, 3 5, 2 11" fill="none" stroke="#ef4444" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M 13 13 C 6 8, 2 11, 1 16" fill="none" stroke="#ef4444" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M 13 17 C 6 21, 2 25, 4 28" fill="none" stroke="#ef4444" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M 13 19 C 7 23, 5 27, 7 30" fill="none" stroke="#ef4444" stroke-width="1.8" stroke-linecap="round"/>
+  <!-- Right Legs -->
+  <path d="M 17 11 C 22 4, 27 5, 28 11" fill="none" stroke="#ef4444" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M 17 13 C 24 8, 28 11, 29 16" fill="none" stroke="#ef4444" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M 17 17 C 24 21, 28 25, 26 28" fill="none" stroke="#ef4444" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M 17 19 C 23 23, 25 27, 23 30" fill="none" stroke="#ef4444" stroke-width="1.8" stroke-linecap="round"/>
+  <!-- Spider Body -->
+  <!-- Head -->
+  <ellipse cx="15" cy="8.5" rx="2.6" ry="2.2" fill="#ef4444" filter="url(#spidey-hover-glow)"/>
+  <!-- Glowing Cyan Eyes -->
+  <circle cx="14.1" cy="8" r="0.85" fill="#00f2fe" filter="url(#spidey-hover-glow)"/>
+  <circle cx="15.9" cy="8" r="0.85" fill="#00f2fe" filter="url(#spidey-hover-glow)"/>
+  <!-- Thorax -->
+  <ellipse cx="15" cy="14" rx="3.6" ry="3.6" fill="#ef4444" filter="url(#spidey-hover-glow)"/>
+  <!-- Abdomen -->
+  <path d="M 12.4 16 C 11 21, 13.3 25.5, 15 27.5 C 16.7 25.5, 19 21, 17.6 16 Z" fill="#ef4444" filter="url(#spidey-hover-glow)"/>
+  <!-- Dark Emblem Core -->
+  <ellipse cx="15" cy="14.5" rx="1.6" ry="2" fill="#0f172a"/>
+</svg>
+
