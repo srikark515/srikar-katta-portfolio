@@ -647,8 +647,6 @@
   const mobileNavDrawer = document.getElementById('mobile-nav-drawer');
   const drawerBackdrop = document.getElementById('drawer-backdrop');
   const drawerCloseBtn = document.getElementById('drawer-close-btn');
-  const mobileBarShowreel = document.getElementById('mobile-bar-showreel');
-  const drawerBtnShowreel = document.getElementById('drawer-btn-showreel');
   const drawerLinks = document.querySelectorAll('.drawer-link');
 
   const openMobileDrawer = () => {
@@ -713,22 +711,6 @@
       }, 120);
     });
   });
-
-  if (mobileBarShowreel) {
-    mobileBarShowreel.addEventListener('click', (e) => {
-      e.preventDefault();
-      closeMobileDrawer();
-      openShowreelModal();
-    });
-  }
-
-  if (drawerBtnShowreel) {
-    drawerBtnShowreel.addEventListener('click', (e) => {
-      e.preventDefault();
-      closeMobileDrawer();
-      openShowreelModal();
-    });
-  }
 
   // ---------------------------------------------------------------------------
   // Click Handlers for Section Elements & Nav Dots
