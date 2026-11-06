@@ -311,6 +311,17 @@
         }
       });
 
+      // Update mobile drawer links
+      const dLinks = document.querySelectorAll('.drawer-link');
+      dLinks.forEach((link) => {
+        const linkSec = parseInt(link.getAttribute('data-target-section'), 10);
+        if (linkSec === activeIdx) {
+          link.classList.add('active');
+        } else {
+          link.classList.remove('active');
+        }
+      });
+
       // Update wire highlights based on section
       wireGroups.forEach((wg) => {
         if (activeIdx === 0) {
@@ -630,6 +641,96 @@
   });
 
   // ---------------------------------------------------------------------------
+  // Mobile Top Bar & Navigation Drawer Controller
+  // ---------------------------------------------------------------------------
+  const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+  const mobileNavDrawer = document.getElementById('mobile-nav-drawer');
+  const drawerBackdrop = document.getElementById('drawer-backdrop');
+  const drawerCloseBtn = document.getElementById('drawer-close-btn');
+  const mobileBarShowreel = document.getElementById('mobile-bar-showreel');
+  const drawerBtnShowreel = document.getElementById('drawer-btn-showreel');
+  const drawerLinks = document.querySelectorAll('.drawer-link');
+
+  const openMobileDrawer = () => {
+    if (!mobileNavDrawer) return;
+    mobileNavDrawer.classList.add('open');
+    mobileNavDrawer.setAttribute('aria-hidden', 'false');
+    if (mobileMenuBtn) {
+      mobileMenuBtn.classList.add('active');
+      mobileMenuBtn.setAttribute('aria-expanded', 'true');
+    }
+    document.body.style.overflow = 'hidden';
+  };
+
+  const closeMobileDrawer = () => {
+    if (!mobileNavDrawer) return;
+    mobileNavDrawer.classList.remove('open');
+    mobileNavDrawer.setAttribute('aria-hidden', 'true');
+    if (mobileMenuBtn) {
+      mobileMenuBtn.classList.remove('active');
+      mobileMenuBtn.setAttribute('aria-expanded', 'false');
+    }
+    document.body.style.overflow = '';
+  };
+
+  const toggleMobileDrawer = () => {
+    if (!mobileNavDrawer) return;
+    if (mobileNavDrawer.classList.contains('open')) {
+      closeMobileDrawer();
+    } else {
+      openMobileDrawer();
+    }
+  };
+
+  if (mobileMenuBtn) {
+    mobileMenuBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleMobileDrawer();
+    });
+  }
+
+  if (drawerCloseBtn) {
+    drawerCloseBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      closeMobileDrawer();
+    });
+  }
+
+  if (drawerBackdrop) {
+    drawerBackdrop.addEventListener('click', () => {
+      closeMobileDrawer();
+    });
+  }
+
+  drawerLinks.forEach((link) => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const targetIdx = link.getAttribute('data-target-section');
+      closeMobileDrawer();
+      setTimeout(() => {
+        scrollToSection(targetIdx);
+      }, 120);
+    });
+  });
+
+  if (mobileBarShowreel) {
+    mobileBarShowreel.addEventListener('click', (e) => {
+      e.preventDefault();
+      closeMobileDrawer();
+      openShowreelModal();
+    });
+  }
+
+  if (drawerBtnShowreel) {
+    drawerBtnShowreel.addEventListener('click', (e) => {
+      e.preventDefault();
+      closeMobileDrawer();
+      openShowreelModal();
+    });
+  }
+
+  // ---------------------------------------------------------------------------
   // Click Handlers for Section Elements & Nav Dots
   // ---------------------------------------------------------------------------
   navDots.forEach((dot) => {
@@ -660,6 +761,7 @@
   window.addEventListener('keydown', (e) => {
     if (e.code === 'Escape') {
       closeShowreelModal();
+      closeMobileDrawer();
       return;
     }
 
@@ -1154,7 +1256,15 @@
   }
 
   function positionCylinderCards() {
-    cylRadius = window.innerWidth <= 768 ? 225 : 295;
+    if (window.innerWidth <= 380) {
+      cylRadius = 145;
+    } else if (window.innerWidth <= 480) {
+      cylRadius = 165;
+    } else if (window.innerWidth <= 768) {
+      cylRadius = 220;
+    } else {
+      cylRadius = 295;
+    }
     cylinderCards.forEach((card, i) => {
       const angle = i * CYL_STEP;
       card.style.transform = `rotateY(${angle}deg) translateZ(${cylRadius}px)`;
@@ -1253,7 +1363,7 @@
 
       // Athletic leaping arc high into the air above the cylinder!
       const jumpWave = Math.abs(Math.sin(spideyHopTime));
-      const jumpHeight = window.innerWidth <= 768 ? 44 : 66; // 66px leap upwards!
+      const jumpHeight = window.innerWidth <= 480 ? 28 : (window.innerWidth <= 768 ? 44 : 66);
       spideyJumpY = -jumpWave * jumpHeight;
       spideyJumpX = (webPullDirection > 0 ? 1 : -1) * jumpWave * 16;
       spideyJumpRot = (webPullDirection > 0 ? 1 : -1) * (10 + jumpWave * 14);
@@ -1856,6 +1966,7 @@
     if (e.key === 'Escape') {
       closeCaseStudyModal();
       closeShowreelModal();
+      closeMobileDrawer();
     }
   });
 
