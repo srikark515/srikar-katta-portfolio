@@ -5,6 +5,22 @@
  */
 
 (() => {
+  // Global error safety shield for mobile & WebKit browsers
+  window.addEventListener('unhandledrejection', (e) => {
+    // Suppress unhandled promise rejections (e.g. video autoplay policy, cancelled fetches)
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+  });
+
+  // Mobile & WebKit Detection Helpers
+  const isMobileDevice = () => {
+    return window.innerWidth <= 1024 || /iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent || '');
+  };
+
+  const isWebKitSafari = () => {
+    const ua = navigator.userAgent || '';
+    return /Safari/i.test(ua) && !/Chrome|Chromium|Edg|OPR/i.test(ua);
+  };
+
   // Configuration
   const TOTAL_FRAMES = 239;
   const FRAME_WIDTH = 1920;
@@ -27,7 +43,7 @@
 
   // DOM Elements
   const canvas = document.getElementById('frame-canvas');
-  const ctx = canvas.getContext('2d', { alpha: false });
+  const ctx = canvas ? canvas.getContext('2d', { alpha: false }) : null;
   const navDots = document.querySelectorAll('.nav-dot');
   const sections = document.querySelectorAll('.portfolio-section');
   const clickableTargets = document.querySelectorAll('[data-target-section]');
@@ -197,6 +213,7 @@
   };
 
   const renderImageToCanvas = (img) => {
+    if (!ctx || !canvas) return;
     const imgWidth = img.width || FRAME_WIDTH;
     const imgHeight = img.height || FRAME_HEIGHT;
 
@@ -221,9 +238,12 @@
   // Asynchronous Background Frame Preloader
   // ---------------------------------------------------------------------------
   const preloadSingleFrame = async (index) => {
+    if (framesCache[index]) return;
     const url = getFramePath(index);
     try {
-      if ('createImageBitmap' in window) {
+      // Use native new Image() on WebKit / Safari to allow native purgeable caching
+      // without locking uncompressed GPU bitmaps in WebKit's memory space.
+      if ('createImageBitmap' in window && !isWebKitSafari()) {
         const response = await fetch(url);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const blob = await response.blob();
@@ -258,9 +278,25 @@
   };
 
   const preloadAllFrames = async () => {
+    // 1. Immediately load hero keyframe (Frame 0) for instant background display
     await preloadSingleFrame(0);
     resizeCanvas();
 
+    // 2. Mobile / iOS Memory Protection:
+    // Downloading and decoding all 239 1080p frames takes ~200MB network & ~2GB RAM,
+    // which triggers iOS Safari Jetsam tab memory kill ("A problem repeatedly occurred").
+    // On mobile screens (<= 1024px or mobile devices), load 7 section keyframes (~55MB RAM total).
+    if (isMobileDevice()) {
+      const mobileKeyframes = [0, 40, 80, 120, 160, 200, TOTAL_FRAMES - 1];
+      for (const kf of mobileKeyframes) {
+        if (kf !== 0) {
+          await preloadSingleFrame(kf);
+        }
+      }
+      return;
+    }
+
+    // 3. Desktop: Full 239-frame smooth scrub preloading
     const queue = [];
     for (let i = 1; i < TOTAL_FRAMES; i++) {
       queue.push(i);
@@ -324,6 +360,7 @@
 
       // Update wire highlights based on section
       wireGroups.forEach((wg) => {
+        if (!wg.group) return;
         if (activeIdx === 0) {
           wg.group.classList.remove('dimmed');
           wg.group.classList.add('active');
@@ -630,12 +667,12 @@
     if (wg.pill) {
       wg.pill.addEventListener('mouseenter', () => {
         wg.surging = true;
-        wg.group.classList.add('surging');
+        if (wg.group) wg.group.classList.add('surging');
       });
 
       wg.pill.addEventListener('mouseleave', () => {
         wg.surging = false;
-        wg.group.classList.remove('surging');
+        if (wg.group) wg.group.classList.remove('surging');
       });
     }
   });
@@ -733,9 +770,12 @@
 
   sections.forEach((sec) => {
     sec.addEventListener('click', (e) => {
-      if (e.target.closest('button') || e.target.closest('a')) return;
+      const targetEl = e.target && e.target.nodeType === 1 ? e.target : (e.target && e.target.parentElement);
+      if (targetEl && targetEl.closest && (targetEl.closest('button') || targetEl.closest('a') || targetEl.closest('input') || targetEl.closest('.interactive') || targetEl.closest('.card') || targetEl.closest('.section-card'))) return;
       const secIdx = parseInt(sec.getAttribute('data-section-index'), 10);
-      scrollToSection(secIdx);
+      if (!isNaN(secIdx) && secIdx !== currentActiveSection && !isMobileDevice()) {
+        scrollToSection(secIdx);
+      }
     });
   });
 
@@ -1067,7 +1107,8 @@
   }, { passive: true });
 
   window.addEventListener('click', (e) => {
-    if (e.target.closest('video') || e.target.closest('input')) return;
+    const targetEl = e.target && e.target.nodeType === 1 ? e.target : (e.target && e.target.parentElement);
+    if (targetEl && targetEl.closest && (targetEl.closest('video') || targetEl.closest('input') || targetEl.closest('button') || targetEl.closest('a'))) return;
 
     // Spider-Man responds to user clicks with an excited thwip jump!
     triggerSpideyAcrobatics(true);
@@ -1507,7 +1548,8 @@
       const imdbUrl = (data && data.imdb) || card.getAttribute('data-imdb');
 
       // If clicked on the dedicated IMDb badge
-      if (e.target.closest('.card-imdb-badge')) {
+      const targetEl = e.target && e.target.nodeType === 1 ? e.target : (e.target && e.target.parentElement);
+      if (targetEl && targetEl.closest && targetEl.closest('.card-imdb-badge')) {
         rotateCylinderTo(idx);
         return;
       }
@@ -1545,7 +1587,9 @@
       dragStartRot = targetCylRotation;
       dragVelocity = 0;
       dragMoveDistance = 0;
-      cylinderStage.setPointerCapture(e.pointerId);
+      try {
+        cylinderStage.setPointerCapture(e.pointerId);
+      } catch (_) {}
     });
 
     cylinderStage.addEventListener('pointermove', (e) => {
@@ -1979,10 +2023,18 @@
       const trackWidth = track.clientWidth;
       const targetLeft = targetCard.offsetLeft - (trackWidth - targetCard.offsetWidth) / 2;
 
-      track.scrollTo({
-        left: Math.max(0, targetLeft),
-        behavior: smooth ? 'smooth' : 'auto'
-      });
+      try {
+        if (typeof track.scrollTo === 'function') {
+          track.scrollTo({
+            left: Math.max(0, targetLeft),
+            behavior: smooth ? 'smooth' : 'auto'
+          });
+        } else {
+          track.scrollLeft = Math.max(0, targetLeft);
+        }
+      } catch (_) {
+        track.scrollLeft = Math.max(0, targetLeft);
+      }
 
       updateActiveStates();
     }
